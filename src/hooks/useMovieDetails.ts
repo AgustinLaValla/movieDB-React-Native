@@ -1,29 +1,47 @@
 import React from 'react';
 import { Cast, Credits } from '../interfaces/credits';
 import movieDB from '../api/movieDB';
-import axios from 'axios';
 import { MovieDetails } from '../interfaces/MovieDetails';
+
 
 interface MovieData {
     isLoading: boolean,
-    movieDetails: MovieDetails, 
-    cast: Cast
+    movieDetails: MovieDetails | null | undefined, 
+    cast: Cast[]
 }
 
+const initialState: MovieData = {
+    isLoading: false,
+    movieDetails: null,
+    cast: []
+}
 
-
-export const useMovieDetails = (movieId: string) => {
-    const [movieData, setMovieData] = React.useState<MovieData>();
-
-    const getMovieDetails = movieDB.get<MovieDetails | Credits>(`/${movieId}`);
-    const getCredits = movieDB.get<MovieDetails | Credits>(`/${movieId}/credits`);
-
+export const useMovieDetails = (movieId: number | undefined) => {
+    const [movieData, setMovieData] = React.useState<MovieData>(initialState);
+    
     const getMovieData = async () => {
-        const resp = await axios.all([getMovieDetails, getCredits]);
-        console.log(resp[0].data);
+        const getMovieDetails = movieDB.get<MovieDetails>(`/${movieId}`);
+        const getCredits = movieDB.get<Credits>(`/${movieId}/credits`);
+
+        try {
+            setMovieData(prev => ({...prev, isLoading: true}));
+            const [movieDetailsResponse, creditsResponse] = await Promise.all([getMovieDetails, getCredits]);
+            
+            setMovieData({
+                isLoading: false,
+                movieDetails: movieDetailsResponse.data,
+                cast: creditsResponse.data.cast
+            })    
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     React.useEffect(() => {
-        getMovieData();
-    }, [])
+        if(movieId) {
+            getMovieData();
+        }
+    }, [movieId])
+
+    return {...movieData}
 }

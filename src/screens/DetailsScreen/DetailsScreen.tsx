@@ -1,11 +1,13 @@
 
 import React from 'react'
-import { Text, Pressable, Image, StyleSheet, Dimensions, View, ScrollView } from 'react-native';
+import { Text, Pressable, Image, StyleSheet, Dimensions, View, ScrollView, ActivityIndicator, TouchableOpacity, ImageBackground } from 'react-native';
 import { RootStackNavigator } from '../../types/types';
 import { StackScreenProps } from '@react-navigation/stack';
 import { Movie } from '../../interfaces/movie';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { imageUrl } from '../../constants';
+import { useMovieDetails } from '../../hooks/useMovieDetails';
+import { MovieDetails } from '../../interfaces/MovieDetails';
+import MovieDetailsComponent from '../../components/MovieDetails/MovieDetails';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 
@@ -15,36 +17,45 @@ interface DetailsScreenProps extends StackScreenProps<RootStackNavigator, 'Detai
 
 export default function DetailsScreen({ route, navigation }: DetailsScreenProps) {
     const [movie, setMovie] = React.useState<Movie>();
-    const uri = `${imageUrl}${movie?.poster_path}`;
+    const uri = `${imageUrl}/w500/${movie?.poster_path}`;
+    const { movieDetails, cast, isLoading } = useMovieDetails(movie?.id);
 
-    
+
     React.useEffect(() => {
         setMovie(route.params.movie);
-        console.log(route.params.movie.id)
     }, [])
 
     return (
-        <ScrollView style={{ flex: 1 }}>
-            <Pressable onPress={() => navigation.goBack()} style={styles.imageWrapper}>
-                <Image
+        <ScrollView style={{ flex: 1, position: 'relative' }}>
+            <View style={styles.imageWrapper}>
+                <ImageBackground
                     source={{ uri }}
-                    style={styles.image}
-                />
+                    style={{flex: 1}}
+                    imageStyle={styles.image}
+                >
+                    <TouchableOpacity onPress={() => navigation.pop()} activeOpacity={0.6}>
+                        <Icon
+                            size={40}
+                            color="#ffffff"
+                            name="arrow-back"
+                            style={{marginTop: 10, marginLeft: 5}}
+                        />
+                    </TouchableOpacity>
+                </ImageBackground>
 
-            </Pressable>
+            </View>
 
             <View style={styles.marginWrapper}>
                 <Text style={styles.subTitle}>{movie?.original_title}</Text>
                 <Text style={styles.title}>{movie?.title}</Text>
             </View>
 
-            <View style={styles.marginWrapper}>
-                <Icon
-                    name="star-outline"
-                    color="grey"
-                    size={20}
-                />
-            </View>
+
+            {
+                isLoading
+                    ? <ActivityIndicator size={35} color="grey" style={{ marginTop: 20 }} />
+                    : <MovieDetailsComponent movieDetails={movieDetails as MovieDetails} cast={cast} />
+            }
         </ScrollView>
     )
 }
@@ -65,12 +76,17 @@ const styles = StyleSheet.create({
         elevation: 8,
 
         borderBottomLeftRadius: 50,
-        borderBottomRightRadius: 50
+        borderBottomRightRadius: 50,
+    },
+    backIcons: {
+        position: 'absolute',
+        top: 300,
+        zIndex: 5
+        // left: 10
     },
     image: {
-        flex: 1,
         borderBottomLeftRadius: 50,
-        borderBottomRightRadius: 50
+        borderBottomRightRadius: 50,
     },
 
     title: {

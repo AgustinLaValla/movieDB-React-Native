@@ -15,7 +15,7 @@ type PosterProps = {
 }
 
 export default function Poster({ movie, navigation, height = 420, width = 300 }: PosterProps) {
-    const uri = `${imageUrl}${movie?.poster_path}`;
+    const uri = `${imageUrl}/w500/${movie?.poster_path}`;
     return (
         <TouchableOpacity onPress={() => navigation.navigate('DetailsScreen', { movie })} activeOpacity={0.6}>
             <View style={{ width, height }}>
